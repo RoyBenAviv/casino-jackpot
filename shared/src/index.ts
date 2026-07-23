@@ -7,6 +7,8 @@
  * objects and pure functions — no enums, no runtime-only TS features.
  */
 
+export * from './game'
+
 export const APP_NAME = 'Casino Jackpot'
 
 /** Response shape of GET /api/health. */

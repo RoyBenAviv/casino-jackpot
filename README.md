@@ -54,3 +54,20 @@ One runner — **Vitest** — everywhere. Server endpoints via Supertest (no por
 ## Game rules & API
 
 _(Coming with the game milestones — endpoints, request/response shapes, and the documented interpretation decisions for the cheat logic.)_
+
+## Development journey
+
+### Step 1 — Monorepo boilerplate
+
+Started with a walking skeleton: three workspaces (`shared`/`server`/`client`) and one health check flowing through every layer before any game code.
+
+- **Challenge:** cross-package TypeScript without build-order pain. **Solution:** `shared` is consumed as raw TS source; `tsc` only type-checks, tsup inlines `shared` into the production bundle.
+- **Challenge:** session cookie across origins in dev. **Solution:** CORS with `credentials: true` + axios `withCredentials`.
+- **Challenge:** testing Express without port conflicts. **Solution:** `app.ts` builds the app, only `index.ts` listens — Supertest runs the app in memory.
+
+### Step 2 — Game domain in `shared`
+
+The cheat logic is needed by both the server (secret re-roll) and the client (dodging CASH OUT button) — so `cheatChanceFor(credits)` lives once, in `shared`.
+
+- **Challenge:** the brief doesn't say if 40 and 60 are inside the cheat band. **Solution:** decided `<40 → 0%`, `40–60 → 30%`, `>60 → 60%`, pinned by boundary tests at 39/40/60/61.
+- **Challenge:** symbols and rewards drifting apart. **Solution:** the `SlotSymbol` type is derived from the `SYMBOLS` array — a symbol without a reward fails compilation.
