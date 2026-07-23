@@ -53,7 +53,15 @@ One runner — **Vitest** — everywhere. Server endpoints via Supertest (no por
 
 ## Game rules & API
 
-_(Coming with the game milestones — endpoints, request/response shapes, and the documented interpretation decisions for the cheat logic.)_
+All endpoints live under `/api`; every error uses the envelope `{ error: { code, message } }`.
+
+| Endpoint | Success | Errors |
+| --- | --- | --- |
+| `GET /api/health` | `200 { ok, message }` | — |
+| `POST /api/sessions` | `201 { session: { id, credits: 10 } }` + httpOnly cookie | — |
+| `GET /api/sessions/current` | `200 { session }` | `404 SESSION_NOT_FOUND` |
+
+_(Roll and cash-out endpoints coming next.)_
 
 ## Development journey
 
@@ -71,3 +79,10 @@ The cheat logic is needed by both the server (secret re-roll) and the client (do
 
 - **Challenge:** the brief doesn't say if 40 and 60 are inside the cheat band. **Solution:** decided `<40 → 0%`, `40–60 → 30%`, `>60 → 60%`, pinned by boundary tests at 39/40/60/61.
 - **Challenge:** symbols and rewards drifting apart. **Solution:** the `SlotSymbol` type is derived from the `SYMBOLS` array — a symbol without a reward fails compilation.
+
+### Step 3 — Sessions on the server
+
+A session is `{ id, credits }` in server memory, identified only by an httpOnly cookie — the client holds no game state.
+
+- **Challenge:** server-kept state without a database. **Solution:** an in-memory `Map` behind a `SessionRepository` interface — swapping in a real DB is one new implementation of that interface, nothing else changes.
+- **Challenge:** consistent error responses from anywhere in the stack. **Solution:** a small `HttpError` class — thrown in any controller/service, converted to the standard envelope by the error middleware (Express 5 forwards async throws automatically).

@@ -16,3 +16,14 @@ export interface HealthResponse {
   ok: boolean
   message: string
 }
+
+/** A player's game session, as stored on the server and sent over the wire. */
+export interface Session {
+  id: string
+  credits: number
+}
+
+/** Response shape of POST /api/sessions and GET /api/sessions/current. */
+export interface SessionResponse {
+  session: Session
+}
