@@ -85,4 +85,10 @@ The cheat logic is needed by both the server (secret re-roll) and the client (do
 A session is `{ id, credits }` in server memory, identified only by an httpOnly cookie — the client holds no game state.
 
 - **Challenge:** server-kept state without a database. **Solution:** an in-memory `Map` behind a `SessionRepository` interface — swapping in a real DB is one new implementation of that interface, nothing else changes.
-- **Challenge:** consistent error responses from anywhere in the stack. **Solution:** a small `HttpError` class — thrown in any controller/service, converted to the standard envelope by the error middleware (Express 5 forwards async throws automatically).
+- **Challenge:** consistent error responses from anywhere in the stack. **Solution:** a small `httpError(status, code, message)` helper — thrown in any controller/service, converted to the standard envelope by the error middleware (Express 5 forwards async throws automatically).
+
+### Step 4 — The slot engine
+
+Pure functions, no HTTP, no storage: `spin(rng)` draws 3 symbols, `resolveRoll(credits, rng)` applies the win check and the house cheat — if the first roll won, it may be secretly re-rolled once (chance from `cheatChanceFor`), and the re-roll stands either way. Losses are never re-rolled; the discarded roll never leaves the function.
+
+- **Challenge:** testing logic built on randomness. **Solution:** randomness is injected (`Rng = () => number`), so tests pass a scripted rng (`[0, 0, 0, 0.1, ...]`) and every scenario — win, cheated win, re-rolled win that still pays — becomes exact and repeatable.

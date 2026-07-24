@@ -24,6 +24,13 @@ export const SYMBOL_LETTERS: Record<SlotSymbol, string> = {
   watermelon: 'W',
 }
 
+/** The outcome of one roll — only the FINAL result ever leaves the server. */
+export interface Roll {
+  symbols: [SlotSymbol, SlotSymbol, SlotSymbol]
+  win: boolean
+  reward: number
+}
+
 /**
  * The house edge: the chance that a winning roll is secretly re-rolled,
  * based on the session's credits. Used by BOTH the server cheat (re-roll)
