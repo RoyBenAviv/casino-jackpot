@@ -24,6 +24,14 @@ export const SYMBOL_LETTERS: Record<SlotSymbol, string> = {
   watermelon: 'W',
 }
 
+/** Presentation emoji — the brief allows a starting letter; emoji is a nicer take. */
+export const SYMBOL_EMOJI: Record<SlotSymbol, string> = {
+  cherry: '🍒',
+  lemon: '🍋',
+  orange: '🍊',
+  watermelon: '🍉',
+}
+
 /** The outcome of one roll — only the FINAL result ever leaves the server. */
 export interface Roll {
   symbols: [SlotSymbol, SlotSymbol, SlotSymbol]

@@ -113,3 +113,9 @@ The React client now plays the full loop. A `useSession` hook bootstraps on moun
 
 - **Challenge:** the client must never hold game truth. **Solution:** every credit value shown comes straight from a server response; the hook only mirrors what the server returns.
 - The UI here is intentionally plain — the animated reveal and the dodging CASH OUT button come next.
+
+### Step 8 — The animated reveal
+
+On ROLL the three blocks spin (an animated `X`); when the server answers, they reveal one at a time — block 1 at 1s, block 2 at 2s, block 3 at 3s — as the brief specifies. Credits drop by the 1-credit cost immediately; any reward lands on the final reveal. Symbols show as emoji (🍒🍋🍊🍉).
+
+- **Challenge:** the round is a small sequence over time (spin → reveal → reveal → reveal → settle). **Solution:** a `revealed` counter (0–3) driven by three `setTimeout`s; each block renders its symbol once `index < revealed`, otherwise the spinning `X`. Timers are tracked in a ref and cleared on unmount and at the start of the next roll.
