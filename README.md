@@ -119,3 +119,14 @@ The React client now plays the full loop. A `useSession` hook bootstraps on moun
 On ROLL the three blocks spin (an animated `X`); when the server answers, they reveal one at a time — block 1 at 1s, block 2 at 2s, block 3 at 3s — as the brief specifies. Credits drop by the 1-credit cost immediately; any reward lands on the final reveal. Symbols show as emoji (🍒🍋🍊🍉).
 
 - **Challenge:** the round is a small sequence over time (spin → reveal → reveal → reveal → settle). **Solution:** a `revealed` counter (0–3) driven by three `setTimeout`s; each block renders its symbol once `index < revealed`, otherwise the spinning `X`. Timers are tracked in a ref and cleared on unmount and at the start of the next roll.
+
+### Step 9 — The dodging CASH OUT button
+
+The twist: the CASH OUT button dodges the cursor using the **same** `cheatChanceFor(credits)` the server cheats with — 0% under 40 credits, 30% at 40–60, 60% above. The richer the player, the harder it is to leave with the money — the house edge, end to end, from one shared function.
+
+- **Challenge:** don't punish keyboard users. **Solution:** dodging fires on `pointerenter` (a mouse event), so Tab + Enter always activates the button — accessible by design.
+
+### Step 10 — Client behavior tests
+
+- **Dodge** — stub `Math.random`: rich players see the button jump (its `transform` changes), poor players never do.
+- **Reveal timing** — with fake timers, ROLL then advance the clock 1s at a time to assert blocks reveal in order and the reward lands only on the final reveal (credits 9 → 19).

@@ -1,5 +1,6 @@
 import { APP_NAME, SYMBOL_EMOJI } from '@casino/shared'
 import { useSession } from './hooks/useSession'
+import { CashOutButton } from './cmps/CashOutButton'
 
 /**
  * The slot machine: 3 blocks in a row, a ROLL and a CASH OUT button.
@@ -17,7 +18,7 @@ export default function App() {
   /** What a single block shows: its revealed symbol, else a spinning X, else empty. */
   function blockFace(i: number) {
     if (result && i < revealed) return SYMBOL_EMOJI[result.symbols[i]]
-    if (spinning) return <span className="animate-spin">✖</span>
+    if (spinning) return <span className="animate-spin [animation-duration:300ms]">✖</span>
     return '·'
   }
 
@@ -44,7 +45,7 @@ export default function App() {
 
           {settled && (
             <p className="text-sm text-neutral-400">
-              {result.win ? `You won ${result.reward}! 🎉` : 'No match.'}
+              {result.win ? `You won ${result.reward} credits! 🎉` : 'No match.'}
             </p>
           )}
 
@@ -60,13 +61,7 @@ export default function App() {
             >
               ROLL
             </button>
-            <button
-              onClick={cashout}
-              disabled={busy}
-              className="rounded bg-amber-600 px-6 py-2 font-semibold disabled:opacity-40"
-            >
-              CASH OUT
-            </button>
+            <CashOutButton credits={credits} disabled={busy} onClick={cashout} />
           </div>
         </>
       ) : (
