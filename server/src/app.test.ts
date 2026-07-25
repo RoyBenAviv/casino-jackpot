@@ -45,3 +45,40 @@ describe('sessions', () => {
     expect(res.body.session).toEqual(created.body.session)
   })
 })
+
+describe('rolls', () => {
+  it('a winning roll deducts the cost and banks the reward', async () => {
+    // 10 credits → pay 1 → 9 → watermelon×3 (rng .75×3) → no cheat below 40 → +40 → 49
+    const agent = request.agent(buildApp({ rng: () => 0.75 }))
+    await agent.post('/api/sessions')
+    const res = await agent.post('/api/sessions/current/rolls')
+
+    expect(res.status).toBe(200)
+    expect(res.body.roll).toEqual({
+      symbols: ['watermelon', 'watermelon', 'watermelon'],
+      win: true,
+      reward: 40,
+    })
+    expect(res.body.credits).toBe(49)
+  })
+
+  it('rolling with no session returns 404', async () => {
+    const res = await request(buildApp()).post('/api/sessions/current/rolls')
+
+    expect(res.status).toBe(404)
+    expect(res.body.error.code).toBe('SESSION_NOT_FOUND')
+  })
+
+  it('rolling at 0 credits returns 409', async () => {
+    // always draw cherry/lemon/orange → a loss every roll, so credits only drain
+    const draws = [0, 0.25, 0.5]
+    let i = 0
+    const agent = request.agent(buildApp({ rng: () => draws[i++ % 3] }))
+    await agent.post('/api/sessions')
+    for (let n = 0; n < 10; n++) await agent.post('/api/sessions/current/rolls') // 10 → 0
+    const res = await agent.post('/api/sessions/current/rolls')
+
+    expect(res.status).toBe(409)
+    expect(res.body.error.code).toBe('INSUFFICIENT_CREDITS')
+  })
+})

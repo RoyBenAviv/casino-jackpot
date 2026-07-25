@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express'
 import * as sessionService from '../services/session-service'
+import type { Rng } from '../services/game-service'
 import { httpError } from '../middlewares/error-handler'
 
 /** The session id travels ONLY in this httpOnly cookie — invisible to client JS. */
@@ -19,4 +20,11 @@ export async function getCurrentSession(req: Request, res: Response) {
   if (!session) throw httpError(404, 'SESSION_NOT_FOUND', 'No active game session')
 
   res.json({ session })
+}
+
+export async function roll(req: Request, res: Response) {
+  const sessionId: string | undefined = req.cookies[SESSION_COOKIE]
+  const rng: Rng = req.app.locals.rng
+
+  res.json(await sessionService.roll(sessionId, rng))
 }

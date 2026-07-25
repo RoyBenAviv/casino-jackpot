@@ -7,6 +7,8 @@
  * objects and pure functions — no enums, no runtime-only TS features.
  */
 
+import type { Roll } from './game'
+
 export * from './game'
 
 export const APP_NAME = 'Casino Jackpot'
@@ -26,4 +28,10 @@ export interface Session {
 /** Response shape of POST /api/sessions and GET /api/sessions/current. */
 export interface SessionResponse {
   session: Session
+}
+
+/** Response shape of POST /api/sessions/current/rolls. */
+export interface RollResponse {
+  roll: Roll
+  credits: number
 }

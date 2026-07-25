@@ -4,14 +4,17 @@ import cors from 'cors'
 import routes from './routes'
 import { notFoundHandler } from './middlewares/not-found'
 import { errorHandler } from './middlewares/error-handler'
+import type { Rng } from './services/game-service'
 import { env } from './config/env'
 
 /**
  * Builds the Express app without binding a port, so tests can exercise
  * the real app through Supertest. `index.ts` is the only file that listens.
+ * `rng` defaults to Math.random; tests pass a scripted one for exact outcomes.
  */
-export function buildApp() {
+export function buildApp({ rng = Math.random }: { rng?: Rng } = {}) {
   const app = express()
+  app.locals.rng = rng
 
   const corsOptions = {
     origin: env.clientOrigin,

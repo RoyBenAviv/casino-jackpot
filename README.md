@@ -60,8 +60,9 @@ All endpoints live under `/api`; every error uses the envelope `{ error: { code,
 | `GET /api/health` | `200 { ok, message }` | — |
 | `POST /api/sessions` | `201 { session: { id, credits: 10 } }` + httpOnly cookie | — |
 | `GET /api/sessions/current` | `200 { session }` | `404 SESSION_NOT_FOUND` |
+| `POST /api/sessions/current/rolls` | `200 { roll: { symbols, win, reward }, credits }` | `404` · `409 INSUFFICIENT_CREDITS` |
 
-_(Roll and cash-out endpoints coming next.)_
+_(Cash-out endpoint coming next.)_
 
 ## Development journey
 
@@ -92,3 +93,10 @@ A session is `{ id, credits }` in server memory, identified only by an httpOnly 
 Pure functions, no HTTP, no storage: `spin(rng)` draws 3 symbols, `resolveRoll(credits, rng)` applies the win check and the house cheat — if the first roll won, it may be secretly re-rolled once (chance from `cheatChanceFor`), and the re-roll stands either way. Losses are never re-rolled; the discarded roll never leaves the function.
 
 - **Challenge:** testing logic built on randomness. **Solution:** randomness is injected (`Rng = () => number`), so tests pass a scripted rng (`[0, 0, 0, 0.1, ...]`) and every scenario — win, cheated win, re-rolled win that still pays — becomes exact and repeatable.
+
+### Step 5 — The roll endpoint
+
+`POST /api/sessions/current/rolls` connects the engine to a session: guard the session exists (`404`) and has credits (`409`), deduct the cost, run `resolveRoll` on the **post-cost** balance, bank any reward, persist, and return `{ roll, credits }`.
+
+- **Challenge:** the endpoint is random, but its tests must be exact. **Solution:** the `rng` is injected into the app (`buildApp({ rng })`, read from `app.locals`) — production defaults to `Math.random`, tests pass a scripted one, so a full HTTP round-trip can assert exact symbols and credits.
+- **Interpretation decision:** the cheat band is evaluated on credits **after** the 1-credit cost — the balance the roll is actually played on.
