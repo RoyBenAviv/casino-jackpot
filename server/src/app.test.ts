@@ -82,3 +82,30 @@ describe('rolls', () => {
     expect(res.body.error.code).toBe('INSUFFICIENT_CREDITS')
   })
 })
+
+describe('cashout', () => {
+  it('banks the session credits, closes the session, and refuses a second cashout', async () => {
+    const agent = request.agent(buildApp())
+    await agent.post('/api/sessions') // 10 credits
+
+    const res = await agent.post('/api/sessions/current/cashout')
+    expect(res.status).toBe(200)
+    expect(res.body).toEqual({ cashedOut: 10, account: { balance: 10 } })
+
+    // session is now closed → cashing out again has nothing to bank
+    const again = await agent.post('/api/sessions/current/cashout')
+    expect(again.status).toBe(404)
+  })
+
+  it('accumulates credits across sessions into the same account', async () => {
+    const agent = request.agent(buildApp())
+
+    await agent.post('/api/sessions')
+    await agent.post('/api/sessions/current/cashout') // balance 10
+
+    await agent.post('/api/sessions') // fresh 10-credit session, same account cookie
+    const res = await agent.post('/api/sessions/current/cashout')
+
+    expect(res.body.account.balance).toBe(20)
+  })
+})

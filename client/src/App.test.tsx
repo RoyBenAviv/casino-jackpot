@@ -2,19 +2,22 @@ import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import App from './App'
 
-// Mock the API layer at the module boundary — this smoke test cares about
-// rendering, not about which HTTP client the service uses.
+// Mock the API at the module boundary — this smoke test cares about the
+// bootstrap wiring, not the real network.
 vi.mock('./services/api-service', () => ({
   apiService: {
-    getHealth: vi.fn().mockResolvedValue({ ok: true, message: 'Healthy' }),
+    getCurrentSession: vi.fn().mockResolvedValue({ session: { id: 's1', credits: 10 } }),
+    createSession: vi.fn(),
+    roll: vi.fn(),
+    cashout: vi.fn(),
   },
 }))
 
-describe('App (boilerplate smoke)', () => {
-  it('renders the title and reports the server as reachable', async () => {
+describe('App (bootstrap smoke)', () => {
+  it('renders the title and shows the credits from the rehydrated session', async () => {
     render(<App />)
 
     expect(screen.getByRole('heading', { name: /casino jackpot/i })).toBeInTheDocument()
-    expect(await screen.findByText('ok')).toBeInTheDocument()
+    expect(await screen.findByText('10')).toBeInTheDocument()
   })
 })

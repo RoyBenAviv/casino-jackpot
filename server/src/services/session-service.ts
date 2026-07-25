@@ -1,6 +1,13 @@
-import { ROLL_COST, STARTING_CREDITS, type RollResponse, type Session } from '@casino/shared'
+import {
+  ROLL_COST,
+  STARTING_CREDITS,
+  type Account,
+  type RollResponse,
+  type Session,
+} from '@casino/shared'
 import { sessionRepository } from '../repositories/session-repository'
 import { resolveRoll, type Rng } from './game-service'
+import { creditAccount } from './account-service'
 import { httpError } from '../middlewares/error-handler'
 
 export async function createSession(): Promise<Session> {
@@ -32,4 +39,22 @@ export async function roll(sessionId: string | undefined, rng: Rng): Promise<Rol
   await sessionRepository.save(session)
 
   return { roll, credits: session.credits }
+}
+
+/**
+ * Move the session's credits into the (anonymous) account and close the
+ * session. Returns the banked amount and the account so the controller can
+ * refresh the account cookie.
+ */
+export async function cashout(
+  sessionId: string | undefined,
+  accountId: string | undefined,
+): Promise<{ cashedOut: number; account: Account }> {
+  const session = sessionId ? await sessionRepository.get(sessionId) : undefined
+  if (!session) throw httpError(404, 'SESSION_NOT_FOUND', 'No active game session')
+
+  const account = await creditAccount(accountId, session.credits)
+  await sessionRepository.delete(session.id)
+
+  return { cashedOut: session.credits, account }
 }

@@ -61,8 +61,7 @@ All endpoints live under `/api`; every error uses the envelope `{ error: { code,
 | `POST /api/sessions` | `201 { session: { id, credits: 10 } }` + httpOnly cookie | — |
 | `GET /api/sessions/current` | `200 { session }` | `404 SESSION_NOT_FOUND` |
 | `POST /api/sessions/current/rolls` | `200 { roll: { symbols, win, reward }, credits }` | `404` · `409 INSUFFICIENT_CREDITS` |
-
-_(Cash-out endpoint coming next.)_
+| `POST /api/sessions/current/cashout` | `200 { cashedOut, account: { balance } }` + closes session | `404` |
 
 ## Development journey
 
@@ -100,3 +99,17 @@ Pure functions, no HTTP, no storage: `spin(rng)` draws 3 symbols, `resolveRoll(c
 
 - **Challenge:** the endpoint is random, but its tests must be exact. **Solution:** the `rng` is injected into the app (`buildApp({ rng })`, read from `app.locals`) — production defaults to `Math.random`, tests pass a scripted one, so a full HTTP round-trip can assert exact symbols and credits.
 - **Interpretation decision:** the cheat band is evaluated on credits **after** the 1-credit cost — the balance the roll is actually played on.
+
+### Step 6 — Cash out + account
+
+`POST /api/sessions/current/cashout` moves the session's credits into an account, then closes the session.
+
+- **Challenge:** the brief mentions a "user account" but has no login. **Solution:** an anonymous, long-lived `accountId` cookie — cashed-out credits accumulate across sessions without inventing an auth system. Swapping the anonymous id for a real user id is a one-line change.
+- Same in-memory-behind-an-interface pattern as sessions (`AccountRepository`).
+
+### Step 7 — Connecting the client
+
+The React client now plays the full loop. A `useSession` hook bootstraps on mount (`GET /current`, falling back to `POST` a new session), and exposes `roll`/`cashout` actions.
+
+- **Challenge:** the client must never hold game truth. **Solution:** every credit value shown comes straight from a server response; the hook only mirrors what the server returns.
+- The UI here is intentionally plain — the animated reveal and the dodging CASH OUT button come next.

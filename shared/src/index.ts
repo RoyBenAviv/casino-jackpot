@@ -35,3 +35,15 @@ export interface RollResponse {
   roll: Roll
   credits: number
 }
+
+/** A player's long-lived account, where cashed-out credits accumulate. */
+export interface Account {
+  id: string
+  balance: number
+}
+
+/** Response shape of POST /api/sessions/current/cashout. */
+export interface CashoutResponse {
+  cashedOut: number
+  account: { balance: number }
+}
