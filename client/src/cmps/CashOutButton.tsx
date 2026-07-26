@@ -45,7 +45,7 @@ export function CashOutButton({ credits, disabled, onClick }: CashOutButtonProps
       onClick={handleClick}
       disabled={disabled}
       style={{ transform: `translate(${offset.x}px, ${offset.y}px)`, transition: 'transform 120ms' }}
-      className="rounded bg-amber-600 px-6 py-2 font-semibold disabled:opacity-40"
+      className="rounded-lg bg-gradient-to-b from-rose-500 to-rose-700 px-8 py-2.5 font-bold tracking-wide text-white shadow-lg shadow-rose-950/40 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
     >
       CASH OUT
     </button>
