@@ -1,5 +1,7 @@
 # 🎰 Casino Jackpot
 
+**▶️ Live demo: https://casino-jackpot-production.up.railway.app**
+
 A full-stack slot machine where the house always wins.
 
 The player starts a server-side session with **10 credits**. Each roll costs 1 credit; three matching symbols pay out (Cherry 10 · Lemon 20 · Orange 30 · Watermelon 40). The twist: once the player is winning, the server **secretly re-rolls winning rolls** (30% chance at 40–60 credits, 60% above 60) — and the CASH OUT button dodges the cursor using the **same probability bands**.
