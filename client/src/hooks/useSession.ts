@@ -23,6 +23,7 @@ export function useSession() {
   const [spinning, setSpinning] = useState(false)
   const [banked, setBanked] = useState<number | null>(null)
   const [loading, setLoading] = useState(true) // bootstrap / cash-out / new-game in flight
+  const [error, setError] = useState<string | null>(null)
   const timers = useRef<number[]>([])
 
   useEffect(() => {
@@ -39,12 +40,25 @@ export function useSession() {
 
   async function roll() {
     timers.current.forEach(clearTimeout) // clear any timers still running from a previous round
+    setError(null)
     setSpinning(true)
     setRevealed(0)
     setResult(null)
     setCredits((c) => (c === null ? c : c - 1)) // pay the cost up front (brief: deducted by 1)
 
-    const res = await apiService.roll()
+    let res
+    try {
+      res = await apiService.roll()
+    } catch {
+      // Recover: stop spinning, report it, and re-sync credits so the optimistic −1 can't drift.
+      setSpinning(false)
+      setError('Roll failed — please try again.')
+      apiService
+        .getCurrentSession()
+        .then(({ session }) => setCredits(session.credits))
+        .catch(() => {})
+      return
+    }
     setResult(res.roll)
 
     // Reveal the blocks one at a time; the last one settles the round.
@@ -61,23 +75,35 @@ export function useSession() {
 
   async function cashout() {
     setLoading(true)
-    const res = await apiService.cashout()
-    setBanked(res.account.balance)
-    setCredits(null) // the session is now closed — no auto-restart
-    setResult(null)
-    setRevealed(0)
-    setLoading(false)
+    setError(null)
+    try {
+      const res = await apiService.cashout()
+      setBanked(res.account.balance)
+      setCredits(null) // the session is now closed — no auto-restart
+      setResult(null)
+      setRevealed(0)
+    } catch {
+      setError('Cash-out failed — please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function newGame() {
     setLoading(true)
+    setError(null)
     setBanked(null)
     setResult(null)
     setRevealed(0)
-    const { session } = await apiService.createSession()
-    setCredits(session.credits)
-    setLoading(false)
+    try {
+      const { session } = await apiService.createSession()
+      setCredits(session.credits)
+    } catch {
+      setError('Could not start a new game — please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  return { credits, result, revealed, spinning, banked, loading, roll, cashout, newGame }
+  return { credits, result, revealed, spinning, banked, loading, error, roll, cashout, newGame }
 }

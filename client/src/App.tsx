@@ -7,7 +7,7 @@ import { CashOutButton } from './cmps/CashOutButton'
  * Blocks spin (an animated X) until each reveals its symbol at 1s / 2s / 3s.
  */
 export default function App() {
-  const { credits, result, revealed, spinning, banked, loading, roll, cashout, newGame } =
+  const { credits, result, revealed, spinning, banked, loading, error, roll, cashout, newGame } =
     useSession()
 
   const inGame = credits !== null
@@ -25,6 +25,8 @@ export default function App() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-neutral-950 text-neutral-100">
       <h1 className="text-4xl font-bold tracking-tight">🎰 {APP_NAME}</h1>
+
+      {error && <p className="text-sm text-red-400">{error}</p>}
 
       {inGame ? (
         <>
