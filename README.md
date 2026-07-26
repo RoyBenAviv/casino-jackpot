@@ -124,9 +124,36 @@ On ROLL the three blocks spin (an animated `X`); when the server answers, they r
 
 The twist: the CASH OUT button dodges the cursor using the **same** `cheatChanceFor(credits)` the server cheats with — 0% under 40 credits, 30% at 40–60, 60% above. The richer the player, the harder it is to leave with the money — the house edge, end to end, from one shared function.
 
-- **Challenge:** don't punish keyboard users. **Solution:** dodging fires on `pointerenter` (a mouse event), so Tab + Enter always activates the button — accessible by design.
+- **Challenge:** don't punish keyboard users. **Solution:** dodging fires on pointer events (mouse only), so Tab + Enter always activates the button — accessible by design.
+- **Challenge:** relentless dodging made the button impossible to click. **Solution:** a short cooldown after each dodge (a `useRef` timestamp) leaves a small window to land the click — hard but beatable, as the brief intends.
 
 ### Step 10 — Client behavior tests
 
 - **Dodge** — stub `Math.random`: rich players see the button jump (its `transform` changes), poor players never do.
 - **Reveal timing** — with fake timers, ROLL then advance the clock 1s at a time to assert blocks reveal in order and the reward lands only on the final reveal (credits 9 → 19).
+
+### Step 11 — One-origin production build
+
+`npm run build` produces static client files and a bundled server. In production Express serves `client/dist` itself (with an SPA fallback), so the whole app runs from **one origin, one process** — the same-origin setup CORS was standing in for during dev. Unknown `/api/*` routes still return the JSON 404 envelope, not `index.html`.
+
+- **Challenge:** enable static serving in production without breaking dev (where Vite serves the client). **Solution:** serve `client/dist` only when it exists — it's absent in dev, present after a build — so no environment flag is needed.
+
+## Deployment
+
+The app runs as a single Node process that serves both the API and the built client.
+
+```bash
+npm run build     # builds client (client/dist) and server (server/dist)
+npm start         # node server/dist/index.js — serves everything on $PORT (default 3000)
+```
+
+On a host like **Railway**: build command `npm run build`, start command `npm start`. The host's `PORT` is picked up automatically ([config/env.ts](server/src/config/env.ts)); no other configuration is required.
+
+## With more time
+
+Deliberately out of scope for this brief, but where I'd take it next — the seams are already in place:
+
+- **Persistent storage** — sessions and accounts live in memory behind `SessionRepository` / `AccountRepository`; a real DB (Redis/Postgres) is one new implementation of each interface. This also fixes multi-instance deployments, where in-memory state isn't shared.
+- **Orphaned-session cleanup** — starting a new session abandons the old one in the `Map`; a TTL/eviction sweep would bound memory.
+- **Real accounts** — the account is an anonymous cookie; swapping the id for an authenticated user id is a one-line change, and would enable withdrawing or funding new games from the balance.
+- **Funded credits** — starting credits are a free demo stake, so a `NEW GAME → CASH OUT` loop banks credits without playing. A real product would fund credits by deposit/purchase, closing that loop.
